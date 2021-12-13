@@ -61,11 +61,15 @@ protected:
 	Model baseModel;
 	Model skyboxModel;
 	Model pipesModel;
+	Model doorsModel;
+	Model toolModel;
 	Camera* cam;
 
 	bool isWireframeOn = false;
 	bool isFullbrightOn = false;
 	float rotAngle = 0.0f;
+	float light1FadeSpeed = 0.35f;
+	bool invertLightFade = false;
 };
 
 #endif

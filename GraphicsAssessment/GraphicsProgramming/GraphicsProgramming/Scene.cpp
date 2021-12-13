@@ -2,6 +2,10 @@
 
 // Scene constructor, initilises OpenGL
 // You should add further variables to need initilised.
+
+//This is outside the methods so this can be edited in update
+GLfloat Light_Diffuse2[] = { 0.7f, 0.0f, 0.0f, 1.0f };
+
 Scene::Scene(Input *in)
 {
 	// Store pointer for input class
@@ -11,12 +15,30 @@ Scene::Scene(Input *in)
 	// Other OpenGL / render setting should be applied here.
 
 	// Initialise scene variables
-	
+
+	//Light 0 - Red Point
+	GLfloat light_Position[] = { 0.0f, 2.0f, 0.0f, 1.0f };
+	GLfloat Light_Diffuse[] = { 0.4f, 0.4f, 0.4f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, light_Position);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, Light_Diffuse);
+	glEnable(GL_LIGHT0);
+
+	//Light 1 - Spot
+	GLfloat light_Position2[] = { 0.0f, 1.0f, 0.0f, 0.0f };
+	GLfloat spot_direction2[] = { 0.0, -1.0, 0.0 };
+	glLightfv(GL_LIGHT1, GL_POSITION, light_Position2);
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spot_direction2);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, Light_Diffuse2);
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 90.0f);
+	glEnable(GL_LIGHT1);
+
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_LIGHTING);
+
 	cam = new Camera(input);
 
-	if (!baseModel.load("models/station_base.obj", "gfx/crate.png"))
+	//Load each model with textures
+	if (!baseModel.load("models/station_base.obj", "gfx/metal2.png"))
 		printf("Model 'Base' failed to load");
 
 	if (!skyboxModel.load("models/station_skybox.obj", "gfx/space.png"))
@@ -25,6 +47,13 @@ Scene::Scene(Input *in)
 	if (!pipesModel.load("models/station_pipes.obj", "gfx/pipe.png"))
 		printf("Model 'Pipes' failed to load");
 
+	if (doorsModel.load("models/station_doors.obj", "gfx/door.png"))
+		printf("Model 'Doors' failed to load");
+
+	if (toolModel.load("models/station_toolbox.obj", "gfx/metal1.png"))
+		printf("Model 'Doors' failed to load");
+
+	//Unbinds the texture once finished
 	glBindTexture(GL_TEXTURE_2D, NULL);
 }
 
@@ -33,7 +62,7 @@ void Scene::handleInput(float dt)
 	// Handle user input
 	cam->HandleInput(dt);
 
-	//If the Q key is pressed, enable or disable wireframe mode
+	//When the Q key is pressed, enable or disable wireframe mode
 	if (input->isKeyDown(113))
 	{
 		isWireframeOn = !isWireframeOn;
@@ -41,7 +70,7 @@ void Scene::handleInput(float dt)
 	}
 
 
-	//If the F key is pressed, enable or disable fullbright mode
+	//When the F key is pressed, enable or disable fullbright mode
 	if (input->isKeyDown(102))
 	{
 		isFullbrightOn = !isFullbrightOn;
@@ -59,6 +88,26 @@ void Scene::update(float dt)
 {
 	// update scene related variables.
 
+	//If the first lights diffuse is less than revert the fade effect, else if more than invert the fading
+	if (Light_Diffuse2[0] < 0.05f)
+		invertLightFade = false;
+	else if (Light_Diffuse2[0] > 0.75f)
+		invertLightFade = true;
+
+	if (invertLightFade == true)
+	{
+		Light_Diffuse2[0] -= dt * light1FadeSpeed;
+		//Light_Diffuse2[1] -= dt * light1FadeSpeed;
+		//Light_Diffuse2[2] -= dt * light1FadeSpeed;
+	}
+	else {
+		Light_Diffuse2[0] += dt * light1FadeSpeed;
+		//Light_Diffuse2[1] += dt * light1FadeSpeed;
+		//Light_Diffuse2[2] += dt * light1FadeSpeed;
+	}
+
+
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, Light_Diffuse2);
 	// Calculate FPS for output
 	calculateFPS();
 }
@@ -79,6 +128,8 @@ void Scene::render() {
 	baseModel.render(isWireframeOn);
 	skyboxModel.render(isWireframeOn);
 	pipesModel.render(isWireframeOn);
+	doorsModel.render(isWireframeOn);
+	toolModel.render(isWireframeOn);
 
 	// End render geometry --------------------------------------
 

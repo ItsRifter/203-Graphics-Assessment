@@ -36,7 +36,6 @@ void Model::render(bool enableWireframe)
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -129,7 +128,8 @@ bool Model::loadModel(char* filename)
 	{
 		Vector3 curVertIndex = verts[faces[i] - 1];
 		Vector3 curnormsIndex = norms[faces[i + 2] - 1];
-		Vector3 curTexCoords = texCs[faces[i + 2] - 1];
+		Vector3 curTexCoords = texCs[faces[i + 1] - 1];
+
 		vertex.push_back(curVertIndex.x);
 		vertex.push_back(curVertIndex.y);
 		vertex.push_back(curVertIndex.z);
