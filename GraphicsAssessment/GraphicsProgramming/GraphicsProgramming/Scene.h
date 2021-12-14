@@ -22,7 +22,7 @@
 class Scene{
 
 public:
-	Scene(Input *in);
+	Scene(Input* in);
 	// Main render function
 	void render();
 	// Handle input function that receives delta time from parent.
@@ -31,6 +31,8 @@ public:
 	void update(float dt);
 	// Resizes the OpenGL output based on new window size.
 	void resize(int w, int h);
+
+	void ChangeCamera(float dt);
 
 protected:
 	// configure opengl render pipeline
@@ -57,13 +59,21 @@ protected:
 	char mouseText[40];
 	char wireframeText[40];
 	char fullbrightText[40];
+	char positionText[40];
 
 	Model baseModel;
 	Model skyboxModel;
 	Model pipesModel;
 	Model doorsModel;
 	Model toolModel;
-	Camera* cam;
+	Model lightsModel;
+	Model stepLadderModel;
+	Model chairModel;
+
+	Camera* mainCam;
+	Camera freeRoamCam;
+	Camera camSpot1;
+	Camera camSpot2;
 
 	bool isWireframeOn = false;
 	bool isFullbrightOn = false;

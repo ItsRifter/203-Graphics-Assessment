@@ -22,6 +22,13 @@ Camera::Camera(Input* input)
 	glutSetCursor(GLUT_CURSOR_NONE);
 }
 
+//Creates an additional camera with input and a initial position of the XYZ values
+void Camera::CreateCamera(Input* input, float xPos, float yPos, float zPos)
+{
+	this->in = input;
+	position.set(xPos, yPos, zPos);
+}
+
 int Camera::GetMouseX()
 {
 	//Grabs the input of mouse X subtracting the distrance from the x centre
@@ -69,21 +76,27 @@ void Camera::Update()
 
 void Camera::HandleInput(float dt)
 {
-	//Up movement
-	if (in->isKeyDown('w'))
-		MoveForward(dt);
+	//If controls are not locked, allow WASD movement
+	if (!lockedControls)
+	{
+		//Up movement
+		if (in->isKeyDown('w'))
+			MoveForward(dt);
 
-	//Down movement
-	if (in->isKeyDown('s'))
-		MoveBackward(dt);
+		//Down movement
+		if (in->isKeyDown('s'))
+			MoveBackward(dt);
 
-	//Left movement
-	if (in->isKeyDown('a'))
-		MoveLeft(dt);
+		//Left movement
+		if (in->isKeyDown('a'))
+			MoveLeft(dt);
 
-	//Right movement
-	if (in->isKeyDown('d'))
-		MoveRight(dt);
+		//Right movement
+		if (in->isKeyDown('d'))
+			MoveRight(dt);
+	}
+
+	//Mouse should not be locked
 
 	//Left - Right Mouse movement
 	if (GetMouseX() != 0)
@@ -91,6 +104,7 @@ void Camera::HandleInput(float dt)
 		yaw += (GetMouseX() * 2) / mouseSens;
 		Update();
 	}
+
 	//Up - Down Mouse movement
 	if (GetMouseY() != 0)
 	{

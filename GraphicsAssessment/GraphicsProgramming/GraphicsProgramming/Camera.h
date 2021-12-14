@@ -5,8 +5,10 @@
 class Camera
 {
 public:
+	Camera() = default;
 	Camera(Input* userInput);
-
+	
+	void CreateCamera(Input* input, float xPos, float yPos, float zPos);
 	void Update();
 
 	Vector3 GetUpView();
@@ -41,5 +43,6 @@ public:
 
 	float speed = 5.0f;
 	float mouseSens = 25.0f;
+	bool lockedControls = false;
 };
 
