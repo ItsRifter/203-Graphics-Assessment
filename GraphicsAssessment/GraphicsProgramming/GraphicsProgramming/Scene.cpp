@@ -4,7 +4,7 @@
 // You should add further variables to need initilised.
 
 //This is outside the methods so this can be edited in update
-GLfloat Light_Diffuse2[] = { 0.7f, 0.0f, 0.0f, 1.0f };
+GLfloat Light_Diffuse_red[] = { 0.7f, 0.0f, 0.0f, 1.0f };
 
 Scene::Scene(Input *in)
 {
@@ -16,16 +16,25 @@ Scene::Scene(Input *in)
 
 	// Initialise scene variables
 
+	impostor_shadow_square = SOIL_load_OGL_texture
+	(
+		"gfx/square.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_MIPMAPS | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT | SOIL_FLAG_INVERT_Y // Depending on texture file type some need inverted others don't.
+	);
+
 	//Light 0 - Red Point
-	GLfloat light_Position[] = { 0.0f, 2.0f, 0.0f, 1.0f };
-	GLfloat Light_Diffuse[] = { 0.4f, 0.4f, 0.4f, 1.0f };
+	GLfloat light_Position[] = { 3.0f, 3.0f, 2.0f, 1.0f };
+	
 	glLightfv(GL_LIGHT0, GL_POSITION, light_Position);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, Light_Diffuse);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, Light_Diffuse_red);
 	glEnable(GL_LIGHT0);
 
 	//Light 1 - Spot
-	GLfloat light_Position2[] = { 0.0f, 1.0f, 0.0f, 0.0f };
+	GLfloat light_Position2[] = { 0.0f, 5.0f, 0.0f, 0.0f };
 	GLfloat spot_direction2[] = { 0.0, -1.0, 0.0 };
+	GLfloat Light_Diffuse2[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 	glLightfv(GL_LIGHT1, GL_POSITION, light_Position2);
 	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spot_direction2);
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, Light_Diffuse2);
@@ -37,17 +46,20 @@ Scene::Scene(Input *in)
 
 	//Create a new main camera
 	mainCam = new Camera(input);
+
+	//Creates other cameras
 	freeRoamCam.CreateCamera(input, 0, 0.5, 0);
 	camSpot1.CreateCamera(input, 10, 4, -21);
 	camSpot2.CreateCamera(input, 20, 0, 8);
 
+	//Set the main camera to the free roam on start-up
 	mainCam = &freeRoamCam;
 
 	//Load each model with textures
 	if (!baseModel.load("models/station_base.obj", "gfx/metal2.png"))
 		printf("Model 'Base' failed to load");
 
-	if (!skyboxModel.load("models/station_skybox.obj", "gfx/space.png"))
+	if (!skyboxModel.load("models/station_skybox2.obj", "gfx/space.png"))
 		printf("Model 'Skybox' failed to load");
 
 	if (!pipesModel.load("models/station_pipes.obj", "gfx/pipe.png"))
@@ -91,13 +103,18 @@ void Scene::handleInput(float dt)
 		input->setKeyUp(102);
 	}
 
+	//When L or K keys are pressed, rotate the space station
+	if (input->isKeyDown(108))
+		rotateControl += dt * rotateSpeed;
+	else if (input->isKeyDown(107))
+		rotateControl -= dt * rotateSpeed;
+
 	//After the F key is pressed, should lighting be enabled or disabled?
 	if (isFullbrightOn)
 		glDisable(GL_LIGHTING);
 	else
 		glEnable(GL_LIGHTING);
 
-	
 	//Gets input if we should change camera;
 	ChangeCamera(dt);
 
@@ -144,30 +161,75 @@ void Scene::update(float dt)
 	// update scene related variables.
 
 	//If the first lights diffuse is less than revert the fade effect, else if more than invert the fading
-	if (Light_Diffuse2[0] < 0.05f)
+	if (Light_Diffuse_red[0] < 0.05f)
 		invertLightFade = false;
-	else if (Light_Diffuse2[0] > 0.75f)
+	else if (Light_Diffuse_red[0] > 0.75f)
 		invertLightFade = true;
 
 	if (invertLightFade == true)
 	{
 		//Decreases the light multiplied by the fade speed
-		Light_Diffuse2[0] -= dt * light1FadeSpeed;
+		Light_Diffuse_red[0] -= dt * light1FadeSpeed;
 		//Light_Diffuse2[1] -= dt * light1FadeSpeed;
 		//Light_Diffuse2[2] -= dt * light1FadeSpeed;
 	}
 	else {
 		//Increases the light multiplied by the fade speed
-		Light_Diffuse2[0] += dt * light1FadeSpeed;
+		Light_Diffuse_red[0] += dt * light1FadeSpeed;
 		//Light_Diffuse2[1] += dt * light1FadeSpeed;
 		//Light_Diffuse2[2] += dt * light1FadeSpeed;
 	}
 
 	//Update lighting
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, Light_Diffuse2);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, Light_Diffuse_red);
 
 	// Calculate FPS for output
 	calculateFPS();
+}
+
+void Scene::RenderShadow()
+{
+	glBindTexture(GL_TEXTURE_2D, impostor_shadow_square);
+
+	glBegin(GL_QUADS);
+	glNormal3f(0.0f, 0.0f, 1.0f);
+
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(-1.0f, -5.45f, -13.0f);
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(-3.0f, -5.45f, -19.0f);
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(0.0f, -5.45f, -20.0f);
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(1.65f, -5.45f, -14.0f);
+	glTexCoord2f(0.0f, 0.0f);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, NULL);
+}
+
+void Scene::RenderShadow2()
+{
+	glBindTexture(GL_TEXTURE_2D, impostor_shadow_square);
+	
+	glRotatef(20.0f, 0.0f, 1.0f, 0.0f);
+	glTranslatef(0.0f, 0.0f, -0.5f);
+
+	glBegin(GL_QUADS);
+		glNormal3f(0.0f, 0.0f, 1.0f);
+
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(0.0f, -5.45f, 0.0f);
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(-3.0f, -5.45f, 0.0f);
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(-3.0f, -5.45f, -2.0f);
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(0.0f, -5.45f, -2.0f);
+		glTexCoord2f(0.0f, 0.0f);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, NULL);
 }
 
 void Scene::render() {
@@ -183,14 +245,27 @@ void Scene::render() {
 	// Render geometry/scene here -------------------------------------	
 
 	//Renders models either with or without wireframe on
-	baseModel.render(isWireframeOn);
+	
+	//Fix lighting so that the space box (skybox) isn't lit with the red fading colour
+	glDisable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
 	skyboxModel.render(isWireframeOn);
+	glEnable(GL_LIGHT0);
+	glDisable(GL_LIGHT1);
+
+	glRotatef(rotateControl, 0.0f, 1.0f, 0.0f);
+
+	baseModel.render(isWireframeOn);
 	pipesModel.render(isWireframeOn);
 	doorsModel.render(isWireframeOn);
 	toolModel.render(isWireframeOn);
 	lightsModel.render(isWireframeOn);
 	chairModel.render(isWireframeOn);
 	stepLadderModel.render(isWireframeOn);
+
+	//Render shadow impostors
+	RenderShadow();
+	RenderShadow2();
 
 	// End render geometry --------------------------------------
 

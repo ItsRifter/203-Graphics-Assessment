@@ -34,6 +34,8 @@ public:
 
 	void ChangeCamera(float dt);
 
+	void RenderShadow();
+	void RenderShadow2();
 protected:
 	// configure opengl render pipeline
 	void initialiseOpenGL();
@@ -77,9 +79,13 @@ protected:
 
 	bool isWireframeOn = false;
 	bool isFullbrightOn = false;
+	bool invertLightFade = false;
 	float rotAngle = 0.0f;
 	float light1FadeSpeed = 0.35f;
-	bool invertLightFade = false;
+	float rotateControl = 0.0f;
+	float rotateSpeed = 25.0f;
+
+	GLuint impostor_shadow_square;
 };
 
 #endif
