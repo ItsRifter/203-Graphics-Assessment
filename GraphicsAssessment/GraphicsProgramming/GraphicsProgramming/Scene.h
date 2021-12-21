@@ -36,6 +36,11 @@ public:
 
 	void RenderShadow();
 	void RenderShadow2();
+	void RenderMirror();
+	void RenderMirror2();
+	void RenderModels();
+	void RenderPlanet(double radius, int slice, int stacks);
+
 protected:
 	// configure opengl render pipeline
 	void initialiseOpenGL();

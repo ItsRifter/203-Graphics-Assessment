@@ -84,6 +84,126 @@ Scene::Scene(Input *in)
 	glBindTexture(GL_TEXTURE_2D, NULL);
 }
 
+//Creates a stencil buffer / mirror effect
+void Scene::RenderMirror()
+{
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_ALWAYS, 1, 1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+	glDisable(GL_DEPTH_TEST);
+
+	glBegin(GL_QUADS);
+		glNormal3f(0.0f, 0.0f, 1.0f);
+		glVertex3f(11.0f, -2.0f, -14.5f);
+		glVertex3f(11.0f, -2.0f, -6.0f);
+		glVertex3f(11.0f, 2.0f, -6.0f);
+		glVertex3f(11.0f, 2.0f, -14.5f);
+	glEnd();
+
+	glEnable(GL_DEPTH_TEST);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glStencilFunc(GL_EQUAL, 1, 1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glPushMatrix();
+
+	//If fullbright is enabled
+	//do not disable the lighting here
+	if(!isFullbrightOn)
+		glDisable(GL_LIGHTING);
+
+	glScalef(-1.0, 1.0, 1.0);
+	glTranslatef(-20, 0, 0);
+	glColor4f(0.6f, 0.6f, 0.6f, 0.8f);
+	
+	RenderModels();
+	glPopMatrix();
+	glDisable(GL_STENCIL_TEST);
+	glEnable(GL_BLEND);
+
+	glBegin(GL_QUADS);
+		glNormal3f(0.0f, 0.0f, 1.0f);
+		glVertex3f(11.0f, -2.0f, -14.5f);
+		glVertex3f(11.0f, -2.0f, -6.0f);
+		glVertex3f(11.0f, 2.0f, -6.0f);
+		glVertex3f(11.0f, 2.0f, -14.5f);
+	glEnd();
+
+	//If fullbright is enabled
+	//do not re-enable the lighting here
+	if (!isFullbrightOn)
+		glEnable(GL_LIGHTING);
+
+	glDisable(GL_BLEND);
+
+	glPushMatrix();
+	glTranslatef(5, 0, 0);
+	//glRotatef(180, 0, 1, 0);
+
+	glPopMatrix();
+}
+
+//Same process as above but for the 2nd window
+void Scene::RenderMirror2()
+{
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_ALWAYS, 1, 1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+	glDisable(GL_DEPTH_TEST);
+
+	glBegin(GL_QUADS);
+		glNormal3f(0.0f, 0.0f, 1.0f);
+		glVertex3f(11.0f, -2.0f, 0.0f);
+		glVertex3f(11.0f, -2.0f, 8.0f);
+		glVertex3f(11.0f, 2.0f, 8.0f);
+		glVertex3f(11.0f, 2.0f, 0.0f);
+	glEnd();
+
+	glEnable(GL_DEPTH_TEST);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glStencilFunc(GL_EQUAL, 1, 1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glPushMatrix();
+
+	//If fullbright is enabled
+	//do not disable the lighting here
+	if (!isFullbrightOn)
+		glDisable(GL_LIGHTING);
+
+	glScalef(-1.0, 1.0, 1.0);
+	glTranslatef(-20, 0, 0);
+	glColor4f(0.6f, 0.6f, 0.6f, 0.8f);
+
+	RenderModels();
+	glPopMatrix();
+	glDisable(GL_STENCIL_TEST);
+	glEnable(GL_BLEND);
+
+	glBegin(GL_QUADS);
+	glNormal3f(0.0f, 0.0f, 1.0f);
+	glVertex3f(11.0f, -2.0f, 0.0f);
+	glVertex3f(11.0f, -2.0f, 8.0f);
+	glVertex3f(11.0f, 2.0f, 8.0f);
+	glVertex3f(11.0f, 2.0f, 0.0f);
+	glEnd();
+
+	//If fullbright is enabled
+	//do not re-enable the lighting here
+	if (!isFullbrightOn)
+		glEnable(GL_LIGHTING);
+
+	glDisable(GL_BLEND);
+
+	glPushMatrix();
+	glTranslatef(5, 0, 0);
+	//glRotatef(180, 0, 1, 0);
+
+	glPopMatrix();
+}
+
 void Scene::handleInput(float dt)
 {
 	// Handle user input
@@ -232,6 +352,22 @@ void Scene::RenderShadow2()
 	glBindTexture(GL_TEXTURE_2D, NULL);
 }
 
+void Scene::RenderModels()
+{
+	baseModel.render(isWireframeOn);
+	pipesModel.render(isWireframeOn);
+	doorsModel.render(isWireframeOn);
+	toolModel.render(isWireframeOn);
+	lightsModel.render(isWireframeOn);
+	chairModel.render(isWireframeOn);
+	stepLadderModel.render(isWireframeOn);
+}
+
+void Scene::RenderPlanet(double radius, int slice, int stacks)
+{
+	glutSolidSphere(radius, slice, stacks);
+}
+
 void Scene::render() {
 
 	// Clear Color and Depth Buffers
@@ -254,18 +390,30 @@ void Scene::render() {
 	glDisable(GL_LIGHT1);
 
 	glRotatef(rotateControl, 0.0f, 1.0f, 0.0f);
+	
+	//Render reflective windows
+	RenderMirror();
+	RenderMirror2();
 
-	baseModel.render(isWireframeOn);
-	pipesModel.render(isWireframeOn);
-	doorsModel.render(isWireframeOn);
-	toolModel.render(isWireframeOn);
-	lightsModel.render(isWireframeOn);
-	chairModel.render(isWireframeOn);
-	stepLadderModel.render(isWireframeOn);
+	//Render models
+	RenderModels();
 
 	//Render shadow impostors
 	RenderShadow();
 	RenderShadow2();
+
+	//Render planets outside the station
+	glTranslatef(-30, 5, -30);
+	RenderPlanet(4.0, 16, 16);
+
+	glTranslatef(15, -5, 0);
+	RenderPlanet(3.0, 16, 16);
+
+	glTranslatef(0, 10, 30);
+	RenderPlanet(3.0, 16, 16);
+
+	glTranslatef(-15, 0, -5);
+	RenderPlanet(1.5, 16, 16);
 
 	// End render geometry --------------------------------------
 
